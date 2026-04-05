@@ -1,3 +1,22 @@
+server:
+  port: 8080
+
 spring:
-  application:
+    config:
+      import:
+        - optional:file:../.env[.properties]
+        - optional:file:.env[.properties]
+    data:
+      mongodb:
+        uri: "mongodb+srv://ushansulakshana81_db_user:Ushan%402002@cluster0.h9ewddx.mongodb.net/smart-campus-hub?retryWrites=true&w=majority"
+    security:
+      oauth2:
+        client:
+          registration:
+            google:
+              client-id: ${GOOGLE_CLIENT_ID:NOT_SET}
+              client-secret: ${GOOGLE_CLIENT_SECRET:NOT_SET}
+              scope: profile, email
+        
+application:
     name: smart-campus-hub

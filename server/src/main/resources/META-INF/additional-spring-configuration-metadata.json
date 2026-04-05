@@ -1,0 +1,22 @@
+{"properties": [
+  {
+    "name": "security.oauth2.client.registration.google.client-id",
+    "type": "java.lang.String",
+    "description": "A description for 'security.oauth2.client.registration.google.client-id'"
+  },
+  {
+    "name": "security.oauth2.client.registration.google.client-secret",
+    "type": "java.lang.String",
+    "description": "A description for 'security.oauth2.client.registration.google.client-secret'"
+  },
+  {
+    "name": "security.oauth2.client.registration.google.scope",
+    "type": "java.lang.String",
+    "description": "A description for 'security.oauth2.client.registration.google.scope'"
+  },
+  {
+    "name": "application.name",
+    "type": "java.lang.String",
+    "description": "A description for 'application.name'"
+  }
+]}

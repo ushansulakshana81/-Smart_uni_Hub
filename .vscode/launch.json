@@ -1,0 +1,15 @@
+{
+    "configurations": [
+        
+        {
+            "type": "java",
+            "name": "Spring Boot-SmartCampusHubApplication<smart-campus-hub>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.sliit.paf.smart_campus_hub.SmartCampusHubApplication",
+            "projectName": "smart-campus-hub",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
