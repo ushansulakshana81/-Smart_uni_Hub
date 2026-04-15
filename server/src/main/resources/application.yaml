@@ -8,7 +8,7 @@ spring:
         - optional:file:.env[.properties]
     data:
       mongodb:
-        uri: "mongodb+srv://ushansulakshana81_db_user:Ushan%402002@cluster0.h9ewddx.mongodb.net/smart-campus-hub?retryWrites=true&w=majority"
+        uri: ${MONGODB_URI}
     security:
       oauth2:
         client:
