@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './features/user-management/context/AuthContext';
+import { AuthProvider } from './features/user-management/context/AuthContext';
+import { useAuth } from './features/user-management/hooks/useAuth';
 import { LandingPage } from './features/user-management/pages/LandingPage';
 import { LoginForm } from './features/user-management/components/LoginForm';
 import { RegisterForm } from './features/user-management/components/RegisterForm';
