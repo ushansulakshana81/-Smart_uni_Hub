@@ -22,6 +22,9 @@ public class User {
     @Indexed(unique = true)
     private String email;
 
+    @Indexed(unique = true, sparse = true)
+    private String nic;
+
     private String firstName;
     private String lastName;
     private String password;

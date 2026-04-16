@@ -18,6 +18,7 @@ public class AuthResponse {
     private String firstName;
     private String lastName;
     private String email;
+    private String nic;
     private Role role;
     private UserStatus status;
     private String accessToken;

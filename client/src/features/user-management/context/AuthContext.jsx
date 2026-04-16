@@ -11,6 +11,7 @@ const PROMPT_DEADLINE_KEY = 'sessionTimeoutPromptDeadlineAt';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [authInitialized, setAuthInitialized] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showTimeoutPrompt, setShowTimeoutPrompt] = useState(false);
@@ -42,6 +43,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem(TIMEOUT_WINDOW_KEY, String(DEFAULT_TIMEOUT_MS));
     setShowTimeoutPrompt(false);
     setUser(userData);
+    setAuthInitialized(true);
   }, []);
 
   const logout = useCallback(() => {
@@ -53,6 +55,7 @@ export const AuthProvider = ({ children }) => {
     clearPromptDeadline();
     setShowTimeoutPrompt(false);
     setUser(null);
+    setAuthInitialized(true);
   }, [clearPromptDeadline]);
 
   const register = useCallback((userData) => {
@@ -61,6 +64,7 @@ export const AuthProvider = ({ children }) => {
 
   // Initialize user from localStorage
   const initializeAuth = useCallback(() => {
+    try {
     const storedToken = localStorage.getItem('accessToken');
     const storedUser = localStorage.getItem('user');
     const lastActivityAt = localStorage.getItem(LAST_ACTIVITY_KEY);
@@ -78,6 +82,7 @@ export const AuthProvider = ({ children }) => {
           const remainingPromptMs = Number(promptDeadlineAt) - Date.now();
           if (remainingPromptMs <= 0) {
             logout();
+            setAuthInitialized(true);
             return;
           }
         } else {
@@ -96,6 +101,12 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
       setShowTimeoutPrompt(false);
       clearPromptDeadline();
+    }
+    } catch (err) {
+      setError('Failed to restore session');
+      logout();
+    } finally {
+      setAuthInitialized(true);
     }
   }, [clearPromptDeadline, getTimeoutWindowMs, logout, setPromptDeadline]);
 
@@ -238,6 +249,7 @@ export const AuthProvider = ({ children }) => {
           logout,
           register,
           initializeAuth,
+            authInitialized,
           isAuthenticated: !!user,
           isAdmin: user?.role === 'ADMIN',
         }}

@@ -3,6 +3,7 @@ package com.sliit.paf.smart_campus_hub.usermanagement.controller;
 import com.sliit.paf.smart_campus_hub.usermanagement.dto.*;
 import com.sliit.paf.smart_campus_hub.usermanagement.service.AuthService;
 import com.sliit.paf.smart_campus_hub.usermanagement.service.OtpService;
+import com.sliit.paf.smart_campus_hub.exception.UnauthorizedException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,14 +52,23 @@ public class AuthController {
     public ResponseEntity<ApiResponse> googleLogin(@RequestParam String googleEmail,
                                                      @RequestParam String googleId,
                                                      @RequestParam String firstName,
-                                                     @RequestParam String lastName) {
+                                                     @RequestParam String lastName,
+                                                     @RequestParam String nic) {
         log.info("Google login endpoint called for email: {}", googleEmail);
         try {
-            AuthResponse authResponse = authService.loginWithGoogle(googleEmail, googleId, firstName, lastName);
+            AuthResponse authResponse = authService.loginWithGoogle(googleEmail, googleId, firstName, lastName, nic);
             return ResponseEntity.ok(new ApiResponse(true, "Google login successful", authResponse));
+        } catch (IllegalArgumentException e) {
+            log.error("Google login validation error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(false, e.getMessage()));
+        } catch (UnauthorizedException e) {
+            log.error("Google login unauthorized: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse(false, e.getMessage()));
         } catch (Exception e) {
             log.error("Google login error: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse(false, e.getMessage()));
         }
     }

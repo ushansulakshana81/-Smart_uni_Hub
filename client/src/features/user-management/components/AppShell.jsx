@@ -1,12 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 export const AppShell = () => {
   const { user, isAdmin, logout } = useAuth();
+  const location = useLocation();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
   const [notifications] = useState([]);
   const popupRef = useRef(null);
+
+  useEffect(() => {
+    if (location.pathname.startsWith('/app/admin/')) {
+      setAdminMenuOpen(true);
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -43,7 +51,66 @@ export const AppShell = () => {
           <NavLink to="/app/bookings" className={navClass}>Bookings</NavLink>
           <NavLink to="/app/support" className={navClass}>Maintenance & Support</NavLink>
           <NavLink to="/app/profile" className={navClass}>My Profile</NavLink>
-          {isAdmin && <NavLink to="/app/admin" className={navClass}>Admin Users</NavLink>}
+          {isAdmin && (
+            <>
+              <button
+                type="button"
+                onClick={() => setAdminMenuOpen((prev) => !prev)}
+                className="w-full text-left px-4 py-2 rounded-lg transition text-indigo-100 hover:bg-indigo-600/50"
+              >
+                <span className="flex items-center justify-between">
+                  <span>Admin Management</span>
+                  <span className="text-xs">{adminMenuOpen ? 'v' : '>'}</span>
+                </span>
+              </button>
+
+              {adminMenuOpen && (
+                <div className="ml-3 mt-1 space-y-1 border-l border-indigo-500 pl-3">
+                  <NavLink
+                    to="/app/admin"
+                    end
+                    className={({ isActive }) =>
+                      `block px-3 py-2 rounded-lg text-sm transition ${
+                        isActive ? 'bg-indigo-500 text-white font-semibold' : 'text-indigo-100 hover:bg-indigo-600/40'
+                      }`
+                    }
+                  >
+                    User Management
+                  </NavLink>
+                  <NavLink
+                    to="/app/admin/facilities-management"
+                    className={({ isActive }) =>
+                      `block px-3 py-2 rounded-lg text-sm transition ${
+                        isActive ? 'bg-indigo-500 text-white font-semibold' : 'text-indigo-100 hover:bg-indigo-600/40'
+                      }`
+                    }
+                  >
+                    Facilities Management
+                  </NavLink>
+                  <NavLink
+                    to="/app/admin/assets-catalogue"
+                    className={({ isActive }) =>
+                      `block px-3 py-2 rounded-lg text-sm transition ${
+                        isActive ? 'bg-indigo-500 text-white font-semibold' : 'text-indigo-100 hover:bg-indigo-600/40'
+                      }`
+                    }
+                  >
+                    Assets Catalogue
+                  </NavLink>
+                  <NavLink
+                    to="/app/admin/resources-management"
+                    className={({ isActive }) =>
+                      `block px-3 py-2 rounded-lg text-sm transition ${
+                        isActive ? 'bg-indigo-500 text-white font-semibold' : 'text-indigo-100 hover:bg-indigo-600/40'
+                      }`
+                    }
+                  >
+                    Resources Management
+                  </NavLink>
+                </div>
+              )}
+            </>
+          )}
         </nav>
 
         <button

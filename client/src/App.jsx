@@ -14,6 +14,9 @@ import { DashboardPage } from './features/user-management/pages/DashboardPage';
 import { FacilitiesResourcesPage } from './features/user-management/pages/FacilitiesResourcesPage';
 import { BookingsPage } from './features/user-management/pages/BookingsPage';
 import { SupportTicketsPage } from './features/user-management/pages/SupportTicketsPage';
+import { AdminFacilitiesManagementPage } from './features/user-management/pages/AdminFacilitiesManagementPage';
+import { AdminAssetsCataloguePage } from './features/user-management/pages/AdminAssetsCataloguePage';
+import { AdminResourcesManagementPage } from './features/user-management/pages/AdminResourcesManagementPage';
 
 function AppContent() {
   const { initializeAuth } = useAuth();
@@ -47,6 +50,30 @@ function AppContent() {
           element={
             <ProtectedRoute requiredRole="ADMIN">
               <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="admin/facilities-management"
+          element={
+            <ProtectedRoute requiredRole="ADMIN">
+              <AdminFacilitiesManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="admin/assets-catalogue"
+          element={
+            <ProtectedRoute requiredRole="ADMIN">
+              <AdminAssetsCataloguePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="admin/resources-management"
+          element={
+            <ProtectedRoute requiredRole="ADMIN">
+              <AdminResourcesManagementPage />
             </ProtectedRoute>
           }
         />

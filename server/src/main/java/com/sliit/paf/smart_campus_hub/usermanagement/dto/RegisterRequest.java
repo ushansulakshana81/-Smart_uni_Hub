@@ -30,6 +30,9 @@ public class RegisterRequest {
     @NotBlank(message = "Confirm password is required")
     private String confirmPassword;
 
+    @NotBlank(message = "NIC is required")
+    private String nic;
+
     private String phoneNumber;
     private String department;
 }

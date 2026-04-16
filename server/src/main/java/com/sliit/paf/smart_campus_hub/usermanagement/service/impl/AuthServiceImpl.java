@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -38,6 +39,10 @@ public class AuthServiceImpl implements AuthService {
             throw new DuplicateEmailException("Email already registered: " + request.getEmail());
         }
 
+        if (userRepository.existsByNic(request.getNic())) {
+            throw new IllegalArgumentException("NIC already registered: " + request.getNic());
+        }
+
         // Validate passwords match
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new IllegalArgumentException("Passwords do not match");
@@ -46,6 +51,7 @@ public class AuthServiceImpl implements AuthService {
         // Create new user
         User user = User.builder()
                 .email(request.getEmail())
+                .nic(request.getNic())
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -99,8 +105,14 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponse loginWithGoogle(String googleEmail, String googleId, String firstName, String lastName) {
+    public AuthResponse loginWithGoogle(String googleEmail, String googleId, String firstName, String lastName, String nic) {
         log.info("Google login attempt with email: {}", googleEmail);
+
+        if (nic == null || nic.isBlank()) {
+            throw new IllegalArgumentException("NIC is required for Google login");
+        }
+
+        Optional<User> nicOwner = userRepository.findByNic(nic);
 
         // Check if user exists by google ID
         User user = userRepository.findByGoogleId(googleId)
@@ -108,9 +120,13 @@ public class AuthServiceImpl implements AuthService {
                     // Check if user exists by email
                     return userRepository.findByEmail(googleEmail)
                             .orElseGet(() -> {
+                                if (nicOwner.isPresent()) {
+                                    throw new IllegalArgumentException("NIC already registered: " + nic);
+                                }
                                 // Create new user
                                 User newUser = User.builder()
                                         .email(googleEmail)
+                                        .nic(nic)
                                         .firstName(firstName)
                                         .lastName(lastName)
                                         .googleId(googleId)
@@ -124,6 +140,16 @@ public class AuthServiceImpl implements AuthService {
                                 return userRepository.save(newUser);
                             });
                 });
+
+        if (nicOwner.isPresent() && !nicOwner.get().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("NIC already registered: " + nic);
+        }
+
+        if (user.getNic() == null || user.getNic().isBlank()) {
+            user.setNic(nic);
+        } else if (!user.getNic().equalsIgnoreCase(nic)) {
+            throw new UnauthorizedException("Provided NIC does not match this account");
+        }
 
         // Check if user is suspended
         if (user.getStatus() == UserStatus.SUSPENDED) {
@@ -190,6 +216,7 @@ public class AuthServiceImpl implements AuthService {
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .email(user.getEmail())
+                .nic(user.getNic())
                 .role(user.getRole())
                 .status(user.getStatus())
                 .accessToken(accessToken)

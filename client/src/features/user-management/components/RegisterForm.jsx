@@ -9,6 +9,7 @@ export const RegisterForm = () => {
     firstName: '',
     lastName: '',
     email: '',
+    nic: '',
     password: '',
     confirmPassword: '',
     phoneNumber: '',
@@ -87,6 +88,18 @@ export const RegisterForm = () => {
               type="email"
               name="email"
               value={formData.email}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">NIC Number</label>
+            <input
+              type="text"
+              name="nic"
+              value={formData.nic}
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
