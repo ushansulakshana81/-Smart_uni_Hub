@@ -9,6 +9,19 @@ spring:
     data:
       mongodb:
         uri: ${MONGODB_URI}
+    mail:
+      host: ${MAIL_HOST:smtp.gmail.com}
+      port: ${MAIL_PORT:587}
+      username: ${MAIL_USERNAME:}
+      password: ${MAIL_PASSWORD:}
+      properties:
+        mail:
+          smtp:
+            auth: true
+            starttls:
+              enable: true
+              required: true
+            starttls.protocol: TLSv1.2
     security:
       oauth2:
         client:
@@ -18,5 +31,11 @@ spring:
               client-secret: ${GOOGLE_CLIENT_SECRET:NOT_SET}
               scope: profile, email
         
+jwt:
+  secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidationPurposeOnly123456789}
+  expiration: ${JWT_EXPIRATION:3600000}
+  refresh:
+    expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
 application:
     name: smart-campus-hub
