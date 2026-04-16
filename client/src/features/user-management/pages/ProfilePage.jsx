@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { userService } from '../services/apiService';
-import '../styles/ProfilePage.css';
 
 export const ProfilePage = () => {
   const { user, logout } = useAuth();
@@ -16,6 +15,10 @@ export const ProfilePage = () => {
     phoneNumber: user?.phoneNumber || '',
     department: user?.department || '',
   });
+
+  useEffect(() => {
+    setProfile(user);
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -47,119 +50,118 @@ export const ProfilePage = () => {
     window.location.href = '/';
   };
 
+  const infoRow = (label, value) => (
+    <div>
+      <label className="block text-gray-700 font-semibold mb-2">{label}</label>
+      <p className="text-gray-900">{value}</p>
+    </div>
+  );
+
   return (
-    <div className="profile-page">
-      <div className="profile-container">
-        <div className="profile-header">
-          <h1>My Profile</h1>
-          <button onClick={handleLogout} className="logout-btn">
-            Logout
-          </button>
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <h1 className="text-4xl font-bold text-gray-900">My Profile</h1>
+        <button onClick={handleLogout} className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition">
+          Logout
+        </button>
+      </div>
+
+      {error && <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">{error}</div>}
+      {success && <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">{success}</div>}
+
+      <div className="bg-white rounded-lg shadow p-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Personal Information</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">First Name</label>
+            {editMode ? (
+              <input
+                type="text"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            ) : (
+              <p className="text-gray-900">{profile?.firstName}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">Last Name</label>
+            {editMode ? (
+              <input
+                type="text"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            ) : (
+              <p className="text-gray-900">{profile?.lastName}</p>
+            )}
+          </div>
+
+          {infoRow('Email', profile?.email)}
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">Phone Number</label>
+            {editMode ? (
+              <input
+                type="tel"
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            ) : (
+              <p className="text-gray-900">{profile?.phoneNumber || 'Not provided'}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">Department</label>
+            {editMode ? (
+              <input
+                type="text"
+                name="department"
+                value={formData.department}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            ) : (
+              <p className="text-gray-900">{profile?.department || 'Not provided'}</p>
+            )}
+          </div>
+
+          {infoRow('Role', profile?.role)}
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">Account Status</label>
+            <p className={`px-3 py-1 rounded-full text-sm font-semibold inline-block ${profile?.status?.toLowerCase() === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+              {profile?.status}
+            </p>
+          </div>
+
+          {infoRow('Joined', profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'N/A')}
         </div>
 
-        {error && <div className="error-message">{error}</div>}
-        {success && <div className="success-message">{success}</div>}
-
-        <div className="profile-content">
-          <div className="profile-info-card">
-            <div className="profile-section">
-              <h2>Personal Information</h2>
-              <div className="info-grid">
-                <div className="info-item">
-                  <label>First Name</label>
-                  {editMode ? (
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                    />
-                  ) : (
-                    <p>{profile?.firstName}</p>
-                  )}
-                </div>
-
-                <div className="info-item">
-                  <label>Last Name</label>
-                  {editMode ? (
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                    />
-                  ) : (
-                    <p>{profile?.lastName}</p>
-                  )}
-                </div>
-
-                <div className="info-item">
-                  <label>Email</label>
-                  <p>{profile?.email}</p>
-                </div>
-
-                <div className="info-item">
-                  <label>Phone Number</label>
-                  {editMode ? (
-                    <input
-                      type="tel"
-                      name="phoneNumber"
-                      value={formData.phoneNumber}
-                      onChange={handleChange}
-                    />
-                  ) : (
-                    <p>{profile?.phoneNumber || 'Not provided'}</p>
-                  )}
-                </div>
-
-                <div className="info-item">
-                  <label>Department</label>
-                  {editMode ? (
-                    <input
-                      type="text"
-                      name="department"
-                      value={formData.department}
-                      onChange={handleChange}
-                    />
-                  ) : (
-                    <p>{profile?.department || 'Not provided'}</p>
-                  )}
-                </div>
-
-                <div className="info-item">
-                  <label>Role</label>
-                  <p>{profile?.role}</p>
-                </div>
-
-                <div className="info-item">
-                  <label>Account Status</label>
-                  <p className={`status ${profile?.status?.toLowerCase()}`}>{profile?.status}</p>
-                </div>
-
-                <div className="info-item">
-                  <label>Joined</label>
-                  <p>{new Date(profile?.createdAt).toLocaleDateString()}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="profile-actions">
-              {!editMode ? (
-                <button onClick={() => setEditMode(true)} className="edit-btn">
-                  Edit Profile
-                </button>
-              ) : (
-                <>
-                  <button onClick={handleSave} disabled={loading} className="save-btn">
-                    {loading ? 'Saving...' : 'Save Changes'}
-                  </button>
-                  <button onClick={() => setEditMode(false)} className="cancel-btn">
-                    Cancel
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
+        <div className="mt-8 flex gap-4">
+          {!editMode ? (
+            <button onClick={() => setEditMode(true)} className="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition">
+              Edit Profile
+            </button>
+          ) : (
+            <>
+              <button onClick={handleSave} disabled={loading} className="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition">
+                {loading ? 'Saving...' : 'Save Changes'}
+              </button>
+              <button onClick={() => setEditMode(false)} className="px-6 py-2 bg-gray-400 text-white font-semibold rounded-lg hover:bg-gray-500 transition">
+                Cancel
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import '../styles/AppShell.css';
 
 export const AppShell = () => {
   const { user, isAdmin, logout } = useAuth();
@@ -25,82 +24,83 @@ export const AppShell = () => {
     window.location.href = '/';
   };
 
+  const navClass = ({ isActive }) =>
+    `block px-4 py-2 rounded-lg transition ${
+      isActive ? 'bg-indigo-600 text-white font-semibold' : 'text-indigo-100 hover:bg-indigo-600/50'
+    }`;
+
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand-block">
-          <h2>Campus Hub</h2>
-          <p>{user?.role || 'USER'} Portal</p>
+    <div className="min-h-screen flex bg-gray-50">
+      <aside className="w-72 bg-gradient-to-b from-indigo-700 to-indigo-900 text-white shadow-lg flex flex-col">
+        <div className="p-6 border-b border-indigo-600">
+          <h2 className="text-2xl font-bold">Campus Hub</h2>
+          <p className="text-indigo-200 text-sm mt-1">{user?.role || 'USER'} Portal</p>
         </div>
 
-        <nav className="sidebar-nav">
-          <NavLink to="/app/dashboard" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <span>Dashboard</span>
-          </NavLink>
-          <NavLink to="/app/facilities" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <span>Facilities & Resources</span>
-          </NavLink>
-          <NavLink to="/app/bookings" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <span>Bookings</span>
-          </NavLink>
-          <NavLink to="/app/support" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <span>Maintenance & Support</span>
-          </NavLink>
-          <NavLink to="/app/profile" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <span>My Profile</span>
-          </NavLink>
-          {isAdmin && (
-            <NavLink to="/app/admin" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-              <span>Admin Users</span>
-            </NavLink>
-          )}
+        <nav className="p-6 space-y-2 flex-1">
+          <NavLink to="/app/dashboard" className={navClass}>Dashboard</NavLink>
+          <NavLink to="/app/facilities" className={navClass}>Facilities & Resources</NavLink>
+          <NavLink to="/app/bookings" className={navClass}>Bookings</NavLink>
+          <NavLink to="/app/support" className={navClass}>Maintenance & Support</NavLink>
+          <NavLink to="/app/profile" className={navClass}>My Profile</NavLink>
+          {isAdmin && <NavLink to="/app/admin" className={navClass}>Admin Users</NavLink>}
         </nav>
 
-        <button onClick={handleLogout} className="sidebar-logout-btn" type="button">
+        <button
+          onClick={handleLogout}
+          type="button"
+          className="w-4/5 mx-auto mb-6 bg-red-600 text-white font-semibold py-2 rounded-lg hover:bg-red-700 transition"
+        >
           Logout
         </button>
       </aside>
 
-      <div className="main-area">
-        <header className="topbar">
-          <div className="welcome-text">
-            <h1>Welcome, {user?.firstName || 'User'}</h1>
-            <p>Manage your campus workflow from one place.</p>
-          </div>
+      <div className="flex-1 flex flex-col">
+        <header className="bg-white border-b border-gray-200 shadow-sm">
+          <div className="flex items-center justify-between px-8 py-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Welcome, {user?.firstName || 'User'}</h1>
+              <p className="text-gray-600">Manage your campus workflow from one place.</p>
+            </div>
 
-          <div className="notification-wrapper" ref={popupRef}>
-            <button
-              type="button"
-              className="notification-btn"
-              onClick={() => setNotificationsOpen((prev) => !prev)}
-              aria-label="Open notifications"
-            >
-              <span className="bell">🔔</span>
-              <span className="badge">{notifications.length}</span>
-            </button>
+            <div className="relative" ref={popupRef}>
+              <button
+                type="button"
+                onClick={() => setNotificationsOpen((prev) => !prev)}
+                aria-label="Open notifications"
+                className="relative text-2xl hover:text-indigo-600 transition"
+              >
+                N
+                {notifications.length > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                    {notifications.length}
+                  </span>
+                )}
+              </button>
 
-            {notificationsOpen && (
-              <div className="notification-popup">
-                <h3>Notifications</h3>
-                <ul>
-                  {notifications.length === 0 && (
-                    <li>
-                      <p className="detail">No notifications available.</p>
-                    </li>
-                  )}
-                  {notifications.map((item) => (
-                    <li key={item.id}>
-                      <p className="title">{item.title}</p>
-                      <p className="detail">{item.detail}</p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+              {notificationsOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                  <div className="p-4 border-b border-gray-200">
+                    <h3 className="font-bold text-gray-900">Notifications</h3>
+                  </div>
+                  <ul className="divide-y divide-gray-200">
+                    {notifications.length === 0 && (
+                      <li className="p-4 text-center text-gray-500">No notifications available.</li>
+                    )}
+                    {notifications.map((item) => (
+                      <li key={item.id} className="p-4 hover:bg-gray-50 transition">
+                        <p className="font-semibold text-gray-900">{item.title}</p>
+                        <p className="text-sm text-gray-600 mt-1">{item.detail}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
-        <main className="content-area">
+        <main className="flex-1 overflow-y-auto px-8 py-6">
           <Outlet />
         </main>
       </div>

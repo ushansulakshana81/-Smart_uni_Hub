@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { adminService } from '../services/apiService';
-import '../styles/AdminDashboard.css';
 
 export const AdminDashboard = () => {
   const { user, logout } = useAuth();
@@ -76,121 +75,86 @@ export const AdminDashboard = () => {
     window.location.href = '/';
   };
 
+  const filterClass = (value) =>
+    `px-4 py-2 rounded-lg font-semibold transition ${
+      filter === value ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+    }`;
+
   return (
-    <div className="admin-dashboard">
-      <div className="dashboard-container">
-        <header className="dashboard-header">
-          <div className="header-content">
-            <h1>Admin Dashboard</h1>
-            <p>Welcome, {user?.firstName}</p>
-          </div>
-          <button onClick={handleLogout} className="logout-btn">
-            Logout
-          </button>
-        </header>
+    <div className="space-y-8">
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="text-gray-600 mt-2">Welcome, {user?.firstName}</p>
+        </div>
+        <button onClick={handleLogout} className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition">
+          Logout
+        </button>
+      </header>
 
-        {error && <div className="error-message">{error}</div>}
-        {success && <div className="success-message">{success}</div>}
+      {error && <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">{error}</div>}
+      {success && <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">{success}</div>}
 
-        <div className="dashboard-stats">
-          <div className="stat-card">
-            <h3>Total Users</h3>
-            <p className="stat-number">{users.length}</p>
-          </div>
-          <div className="stat-card">
-            <h3>Active Users</h3>
-            <p className="stat-number">{users.filter((u) => u.status === 'ACTIVE').length}</p>
-          </div>
-          <div className="stat-card">
-            <h3>Suspended Users</h3>
-            <p className="stat-number">{users.filter((u) => u.status === 'SUSPENDED').length}</p>
-          </div>
-          <div className="stat-card">
-            <h3>Admins</h3>
-            <p className="stat-number">{users.filter((u) => u.role === 'ADMIN').length}</p>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white rounded-lg shadow p-6"><h3 className="text-gray-600 font-semibold">Total Users</h3><p className="text-4xl font-bold text-indigo-600 mt-4">{users.length}</p></div>
+        <div className="bg-white rounded-lg shadow p-6"><h3 className="text-gray-600 font-semibold">Active Users</h3><p className="text-4xl font-bold text-green-600 mt-4">{users.filter((u) => u.status === 'ACTIVE').length}</p></div>
+        <div className="bg-white rounded-lg shadow p-6"><h3 className="text-gray-600 font-semibold">Suspended Users</h3><p className="text-4xl font-bold text-yellow-600 mt-4">{users.filter((u) => u.status === 'SUSPENDED').length}</p></div>
+        <div className="bg-white rounded-lg shadow p-6"><h3 className="text-gray-600 font-semibold">Admins</h3><p className="text-4xl font-bold text-purple-600 mt-4">{users.filter((u) => u.role === 'ADMIN').length}</p></div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">User Management</h2>
+        <div className="flex gap-3 flex-wrap mb-6">
+          <button className={filterClass('all')} onClick={() => setFilter('all')}>All Users</button>
+          <button className={filterClass('active')} onClick={() => setFilter('active')}>Active</button>
+          <button className={filterClass('suspended')} onClick={() => setFilter('suspended')}>Suspended</button>
+          <button className={filterClass('admins')} onClick={() => setFilter('admins')}>Admins</button>
         </div>
 
-        <div className="users-section">
-          <div className="section-header">
-            <h2>User Management</h2>
-            <div className="filter-buttons">
-              <button
-                className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
-                onClick={() => setFilter('all')}
-              >
-                All Users
-              </button>
-              <button
-                className={`filter-btn ${filter === 'active' ? 'active' : ''}`}
-                onClick={() => setFilter('active')}
-              >
-                Active
-              </button>
-              <button
-                className={`filter-btn ${filter === 'suspended' ? 'active' : ''}`}
-                onClick={() => setFilter('suspended')}
-              >
-                Suspended
-              </button>
-              <button
-                className={`filter-btn ${filter === 'admins' ? 'active' : ''}`}
-                onClick={() => setFilter('admins')}
-              >
-                Admins
-              </button>
-            </div>
-          </div>
-
-          {loading ? (
-            <p>Loading users...</p>
-          ) : (
-            <div className="users-table">
-              <table>
-                <thead>
+        {loading ? (
+          <p className="text-center py-8 text-gray-500">Loading users...</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-100 border-b border-gray-200">
+                  <th className="px-6 py-4 text-left font-semibold text-gray-900">Name</th>
+                  <th className="px-6 py-4 text-left font-semibold text-gray-900">Email</th>
+                  <th className="px-6 py-4 text-left font-semibold text-gray-900">Role</th>
+                  <th className="px-6 py-4 text-left font-semibold text-gray-900">Status</th>
+                  <th className="px-6 py-4 text-left font-semibold text-gray-900">Joined</th>
+                  <th className="px-6 py-4 text-left font-semibold text-gray-900">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredUsers.length === 0 && (
                   <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Joined</th>
-                    <th>Actions</th>
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">No users found for this filter</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {filteredUsers.map((u) => (
-                    <tr key={u.id}>
-                      <td>{`${u.firstName} ${u.lastName}`}</td>
-                      <td>{u.email}</td>
-                      <td>{u.role}</td>
-                      <td className={`status ${u.status.toLowerCase()}`}>{u.status}</td>
-                      <td>{new Date(u.createdAt).toLocaleDateString()}</td>
-                      <td className="actions">
-                        {u.status === 'ACTIVE' ? (
-                          <button onClick={() => handleSuspend(u.id)} className="btn-suspend">
-                            Suspend
-                          </button>
-                        ) : (
-                          <button onClick={() => handleUnsuspend(u.id)} className="btn-unsuspend">
-                            Unsuspend
-                          </button>
-                        )}
-                        {u.role === 'USER' && (
-                          <button onClick={() => handleDelete(u.id)} className="btn-delete">
-                            Delete
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {filteredUsers.length === 0 && (
-                <p className="no-data">No users found for this filter</p>
-              )}
-            </div>
-          )}
-        </div>
+                )}
+                {filteredUsers.map((u) => (
+                  <tr key={u.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-gray-900">{`${u.firstName} ${u.lastName}`}</td>
+                    <td className="px-6 py-4 text-gray-600">{u.email}</td>
+                    <td className="px-6 py-4"><span className={`px-3 py-1 rounded-full text-sm font-semibold ${u.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>{u.role}</span></td>
+                    <td className="px-6 py-4"><span className={`px-3 py-1 rounded-full text-sm font-semibold ${u.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{u.status}</span></td>
+                    <td className="px-6 py-4 text-gray-600">{new Date(u.createdAt).toLocaleDateString()}</td>
+                    <td className="px-6 py-4 space-y-2">
+                      {u.status === 'ACTIVE' ? (
+                        <button onClick={() => handleSuspend(u.id)} className="w-full px-3 py-1 bg-yellow-600 text-white text-sm font-semibold rounded hover:bg-yellow-700 transition">Suspend</button>
+                      ) : (
+                        <button onClick={() => handleUnsuspend(u.id)} className="w-full px-3 py-1 bg-green-600 text-white text-sm font-semibold rounded hover:bg-green-700 transition">Unsuspend</button>
+                      )}
+                      {u.role === 'USER' && (
+                        <button onClick={() => handleDelete(u.id)} className="w-full px-3 py-1 bg-red-600 text-white text-sm font-semibold rounded hover:bg-red-700 transition">Delete</button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
