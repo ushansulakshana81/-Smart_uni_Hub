@@ -49,6 +49,14 @@ public class GlobalExceptionHandler {
                 .body(new ApiResponse(false, ex.getMessage()));
     }
 
+    @ExceptionHandler(EmailDeliveryException.class)
+    public ResponseEntity<ApiResponse> handleEmailDeliveryException(
+            EmailDeliveryException ex, WebRequest request) {
+        log.error("Email delivery error: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new ApiResponse(false, ex.getMessage()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse> handleValidationException(
             MethodArgumentNotValidException ex, WebRequest request) {
