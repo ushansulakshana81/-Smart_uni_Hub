@@ -21,7 +21,7 @@ export const LoginForm = () => {
       const response = await authService.login({ email, password });
       if (response.data.success) {
         login(response.data.data);
-        navigate(response.data.data.role === 'ADMIN' ? '/admin/dashboard' : '/profile');
+        navigate('/app/dashboard');
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');

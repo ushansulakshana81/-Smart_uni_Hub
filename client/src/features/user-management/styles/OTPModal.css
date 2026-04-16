@@ -15,7 +15,7 @@
 .otp-modal {
   background: white;
   border-radius: 8px;
-  padding: 40px;
+  padding: clamp(18px, 4vw, 40px);
   max-width: 450px;
   width: 90%;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
@@ -24,12 +24,14 @@
 .otp-header h2 {
   margin-bottom: 10px;
   color: #333;
+  font-size: clamp(1.2rem, 2.8vw, 1.5rem);
 }
 
 .otp-header p {
   color: #666;
-  font-size: 14px;
+  font-size: clamp(0.86rem, 1.5vw, 0.95rem);
   margin-bottom: 10px;
+  line-height: 1.5;
 }
 
 .timer {
@@ -38,23 +40,23 @@
 }
 
 .form-group input[type="text"] {
-  font-size: 18px;
-  letter-spacing: 5px;
+  font-size: clamp(1rem, 2.8vw, 1.125rem);
+  letter-spacing: clamp(2px, 0.8vw, 5px);
   text-align: center;
 }
 
 .modal-actions {
   display: flex;
-  gap: 10px;
+  gap: clamp(8px, 1.6vw, 10px);
   margin-top: 20px;
 }
 
 .modal-actions button {
   flex: 1;
-  padding: 12px;
+  padding: clamp(10px, 1.8vw, 12px);
   border: none;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: clamp(0.86rem, 1.4vw, 0.95rem);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
@@ -81,4 +83,15 @@
 .modal-actions button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+@media (max-width: 520px) {
+  .otp-modal {
+    width: calc(100% - 24px);
+    padding: 16px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
 }

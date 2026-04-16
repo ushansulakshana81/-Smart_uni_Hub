@@ -39,7 +39,7 @@ export const RegisterForm = () => {
       const response = await authService.register(formData);
       if (response.data.success) {
         register(response.data.data);
-        navigate('/profile');
+        navigate('/app/dashboard');
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');

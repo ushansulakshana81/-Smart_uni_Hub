@@ -1,5 +1,7 @@
 package com.sliit.paf.smart_campus_hub.security;
 
+import com.sliit.paf.smart_campus_hub.usermanagement.entity.User;
+import com.sliit.paf.smart_campus_hub.usermanagement.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,6 +25,7 @@ import java.util.Collection;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -35,8 +38,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 // Create authentication object
                 Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
+                userRepository.findByEmail(email)
+                    .map(User::getRole)
+                    .ifPresent(role -> authorities.add(new SimpleGrantedAuthority("ROLE_" + role.name())));
+
                 UsernamePasswordAuthenticationToken authentication = 
-                        new UsernamePasswordAuthenticationToken(userId, null, authorities);
+                    new UsernamePasswordAuthenticationToken(email, null, authorities);
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);

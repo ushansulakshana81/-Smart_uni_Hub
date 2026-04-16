@@ -9,6 +9,11 @@ import { ProfilePage } from './features/user-management/pages/ProfilePage';
 import { AdminDashboard } from './features/user-management/pages/AdminDashboard';
 import { ForgotPasswordPage } from './features/user-management/pages/ForgotPasswordPage';
 import { ProtectedRoute } from './features/user-management/components/ProtectedRoute';
+import { AppShell } from './features/user-management/components/AppShell';
+import { DashboardPage } from './features/user-management/pages/DashboardPage';
+import { FacilitiesResourcesPage } from './features/user-management/pages/FacilitiesResourcesPage';
+import { BookingsPage } from './features/user-management/pages/BookingsPage';
+import { SupportTicketsPage } from './features/user-management/pages/SupportTicketsPage';
 
 function AppContent() {
   const { initializeAuth } = useAuth();
@@ -24,21 +29,28 @@ function AppContent() {
       <Route path="/register" element={<RegisterForm />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route
-        path="/profile"
+        path="/app"
         element={
           <ProtectedRoute>
-            <ProfilePage />
+            <AppShell />
           </ProtectedRoute>
         }
-      />
-      <Route
-        path="/admin/dashboard"
-        element={
-          <ProtectedRoute requiredRole="ADMIN">
-            <AdminDashboard />
-          </ProtectedRoute>
-        }
-      />
+      >
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="facilities" element={<FacilitiesResourcesPage />} />
+        <Route path="bookings" element={<BookingsPage />} />
+        <Route path="support" element={<SupportTicketsPage />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route
+          path="admin"
+          element={
+            <ProtectedRoute requiredRole="ADMIN">
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
       <Route path="/unauthorized" element={<div style={{ textAlign: 'center', padding: '50px' }}>
         <h1>Unauthorized Access</h1>
         <p>You do not have permission to access this page.</p>
