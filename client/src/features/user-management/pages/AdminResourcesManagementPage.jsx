@@ -16,8 +16,19 @@ export const AdminResourcesManagementPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const isEditMode = useMemo(() => editingId !== null, [editingId]);
+
+  const filteredRequests = useMemo(() => {
+    if (!searchQuery.trim()) return requests;
+    const query = searchQuery.toLowerCase();
+    return requests.filter((request) =>
+      request.facilityOrAsset.toLowerCase().includes(query) ||
+      request.resourceType.toLowerCase().includes(query) ||
+      request.requestId.toLowerCase().includes(query)
+    );
+  }, [requests, searchQuery]);
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -128,6 +139,32 @@ export const AdminResourcesManagementPage = () => {
         </div>
       </form>
 
+      <div className="bg-white rounded-xl shadow border border-gray-200 p-4">
+        <div className="flex items-center gap-2">
+          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by facility/asset, resource type, or ID..."
+            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="px-3 py-2 text-gray-500 hover:text-gray-700 transition"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+        {searchQuery && (
+          <p className="mt-2 text-sm text-gray-600">Found {filteredRequests.length} result(s)</p>
+        )}
+      </div>
+
       <div className="bg-white rounded-xl shadow border border-gray-200 overflow-x-auto">
         <table className="w-full min-w-[900px]">
           <thead>
@@ -147,12 +184,14 @@ export const AdminResourcesManagementPage = () => {
                 <td colSpan={7} className="px-4 py-6 text-center text-gray-500">Loading requests...</td>
               </tr>
             )}
-            {!loading && requests.length === 0 && (
+            {!loading && filteredRequests.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-gray-500">No requests added yet.</td>
+                <td colSpan={7} className="px-4 py-6 text-center text-gray-500">
+                  {searchQuery ? 'No requests match your search.' : 'No requests added yet.'}
+                </td>
               </tr>
             )}
-            {!loading && requests.map((item) => (
+            {!loading && filteredRequests.map((item) => (
               <tr key={item.id} className="hover:bg-gray-50">
                 <td className="px-4 py-3 text-sm text-gray-700">{item.requestId}</td>
                 <td className="px-4 py-3 text-sm text-gray-700">{item.resourceType}</td>
