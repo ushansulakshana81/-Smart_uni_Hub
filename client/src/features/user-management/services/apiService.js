@@ -4,6 +4,7 @@ const AUTH_API = '/auth';
 const USERS_API = '/users';
 const ADMIN_API = '/admin';
 const CATALOG_API = '/catalog';
+const TICKETS_API = '/tickets';
 
 export const authService = {
   register: (data) => axiosInstance.post(`${AUTH_API}/register`, data),
@@ -50,4 +51,16 @@ export const adminService = {
 export const catalogService = {
   getFacilities: () => axiosInstance.get(`${CATALOG_API}/facilities`),
   getAssets: () => axiosInstance.get(`${CATALOG_API}/assets`),
+};
+
+export const ticketingService = {
+  getTickets: () => axiosInstance.get(TICKETS_API),
+  getTicketById: (ticketId) => axiosInstance.get(`${TICKETS_API}/${ticketId}`),
+  createTicket: (data) => axiosInstance.post(TICKETS_API, data),
+  updateTicket: (ticketId, data) => axiosInstance.put(`${TICKETS_API}/${ticketId}`, data),
+  updateTicketStatus: (ticketId, data) => axiosInstance.patch(`${TICKETS_API}/${ticketId}/status`, data),
+  deleteTicket: (ticketId) => axiosInstance.delete(`${TICKETS_API}/${ticketId}`),
+  addResponse: (ticketId, data) => axiosInstance.post(`${TICKETS_API}/${ticketId}/responses`, data),
+  updateResponse: (ticketId, responseId, data) => axiosInstance.put(`${TICKETS_API}/${ticketId}/responses/${responseId}`, data),
+  deleteResponse: (ticketId, responseId) => axiosInstance.delete(`${TICKETS_API}/${ticketId}/responses/${responseId}`),
 };
