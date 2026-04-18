@@ -59,7 +59,7 @@ public class TicketingServiceImpl implements TicketingService {
                 .title(request.getTitle().trim())
                 .description(request.getDescription().trim())
                 .issueType(request.getIssueType())
-                .facilityOrAssetName(request.getFacilityOrAssetName().trim())
+            .facilityOrAssetName(normalizeOptionalText(request.getFacilityOrAssetName()))
                 .location(request.getLocation().trim())
                 .status(TicketStatus.OPEN)
                 .createdByUserId(currentUser.getId())
@@ -83,7 +83,7 @@ public class TicketingServiceImpl implements TicketingService {
         ticket.setTitle(request.getTitle().trim());
         ticket.setDescription(request.getDescription().trim());
         ticket.setIssueType(request.getIssueType());
-        ticket.setFacilityOrAssetName(request.getFacilityOrAssetName().trim());
+        ticket.setFacilityOrAssetName(normalizeOptionalText(request.getFacilityOrAssetName()));
         ticket.setLocation(request.getLocation().trim());
         ticket.setUpdatedAt(LocalDateTime.now());
 
@@ -250,5 +250,13 @@ public class TicketingServiceImpl implements TicketingService {
             code = "TCK-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         } while (ticketRepository.existsByTicketCode(code));
         return code;
+    }
+
+    private String normalizeOptionalText(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

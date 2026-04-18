@@ -22,7 +22,6 @@ public class TicketCreateRequest {
     @NotNull(message = "Issue type is required")
     private TicketIssueType issueType;
 
-    @NotBlank(message = "Facility or asset name is required")
     private String facilityOrAssetName;
 
     @NotBlank(message = "Location is required")

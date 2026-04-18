@@ -64,3 +64,13 @@ export const ticketingService = {
   updateResponse: (ticketId, responseId, data) => axiosInstance.put(`${TICKETS_API}/${ticketId}/responses/${responseId}`, data),
   deleteResponse: (ticketId, responseId) => axiosInstance.delete(`${TICKETS_API}/${ticketId}/responses/${responseId}`),
 };
+
+export const bookingService = {
+  getBookings: (params = {}) => axiosInstance.get('/bookings', { params }),
+  getBookingById: (bookingId) => axiosInstance.get(`/bookings/${bookingId}`),
+  createBooking: (data) => axiosInstance.post('/bookings', data),
+  updateBooking: (bookingId, data) => axiosInstance.put(`/bookings/${bookingId}`, data),
+  reviewBooking: (bookingId, data) => axiosInstance.patch(`/bookings/${bookingId}/review`, data),
+  cancelBooking: (bookingId, data) => axiosInstance.patch(`/bookings/${bookingId}/cancel`, data),
+  deleteBooking: (bookingId) => axiosInstance.delete(`/bookings/${bookingId}`),
+};

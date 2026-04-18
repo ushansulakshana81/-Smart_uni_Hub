@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../user-management/hooks/useAuth';
-import { ticketingService } from '../../user-management/services/apiService';
+import { catalogService, ticketingService } from '../../user-management/services/apiService';
 
 const emptyTicketForm = {
   title: '',
@@ -52,6 +52,8 @@ export const TicketingSystemModule = () => {
   const [statusDrafts, setStatusDrafts] = useState({});
   const [resolutionDrafts, setResolutionDrafts] = useState({});
   const [editingResponse, setEditingResponse] = useState({});
+  const [facilities, setFacilities] = useState([]);
+  const [assets, setAssets] = useState([]);
 
   const totalCounts = useMemo(() => {
     const byStatus = tickets.reduce((acc, ticket) => {
@@ -93,6 +95,40 @@ export const TicketingSystemModule = () => {
   useEffect(() => {
     fetchTickets();
   }, []);
+
+  useEffect(() => {
+    const fetchCatalogData = async () => {
+      try {
+        const [facilityResponse, assetResponse] = await Promise.all([
+          catalogService.getFacilities(),
+          catalogService.getAssets(),
+        ]);
+
+        setFacilities(facilityResponse.data.data || []);
+        setAssets(assetResponse.data.data || []);
+      } catch (err) {
+        // Ticketing can still work even if catalog lookup fails.
+      }
+    };
+
+    fetchCatalogData();
+  }, []);
+
+  const mentionCandidates = useMemo(() => {
+    const source = ticketForm.issueType === 'ASSET' ? assets : facilities;
+    const query = (ticketForm.facilityOrAssetName || '').trim().toLowerCase();
+
+    if (!query) {
+      return source.slice(0, 8);
+    }
+
+    return source
+      .filter((item) => {
+        const name = ticketForm.issueType === 'ASSET' ? item.name : item.facilityName;
+        return String(name || '').toLowerCase().includes(query);
+      })
+      .slice(0, 8);
+  }, [assets, facilities, ticketForm.facilityOrAssetName, ticketForm.issueType]);
 
   const clearAlerts = () => {
     setError('');
@@ -238,7 +274,36 @@ export const TicketingSystemModule = () => {
             <option value="FACILITY">Facility</option>
             <option value="ASSET">Asset</option>
           </select>
-          <input name="facilityOrAssetName" value={ticketForm.facilityOrAssetName} onChange={handleTicketField} placeholder="Facility or asset name" className="rounded-lg border border-gray-300 px-4 py-2" required />
+          <div className="space-y-2">
+            <input
+              name="facilityOrAssetName"
+              value={ticketForm.facilityOrAssetName}
+              onChange={handleTicketField}
+              placeholder={ticketForm.issueType === 'ASSET' ? 'Search asset (optional)' : 'Search facility (optional)'}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2"
+            />
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-2">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Suggestions from database</p>
+              <div className="flex flex-wrap gap-2">
+                {mentionCandidates.length === 0 && (
+                  <span className="text-xs text-gray-500">No matching records</span>
+                )}
+                {mentionCandidates.map((item) => {
+                  const value = ticketForm.issueType === 'ASSET' ? item.name : item.facilityName;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setTicketForm((prev) => ({ ...prev, facilityOrAssetName: value || '' }))}
+                      className="rounded-full border border-indigo-200 bg-white px-3 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50"
+                    >
+                      {value}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
           <input name="location" value={ticketForm.location} onChange={handleTicketField} placeholder="Location" className="rounded-lg border border-gray-300 px-4 py-2" required />
         </div>
         <textarea name="description" value={ticketForm.description} onChange={handleTicketField} placeholder="Describe the issue in detail" rows={4} className="w-full rounded-lg border border-gray-300 px-4 py-2" required />
@@ -262,7 +327,9 @@ export const TicketingSystemModule = () => {
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{ticket.ticketCode}</p>
                   <h4 className="text-lg font-bold text-gray-900">{ticket.title}</h4>
-                  <p className="text-sm text-gray-600">{ticket.issueType} - {ticket.facilityOrAssetName} - {ticket.location}</p>
+                  <p className="text-sm text-gray-600">
+                    {ticket.issueType} - {ticket.facilityOrAssetName || 'Not specified'} - {ticket.location}
+                  </p>
                   <p className="mt-2 text-sm text-gray-700">{ticket.description}</p>
                 </div>
                 <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusTone[ticket.status] || 'bg-gray-100 text-gray-700'}`}>
