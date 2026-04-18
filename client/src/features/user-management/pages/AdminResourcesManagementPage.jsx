@@ -20,13 +20,15 @@ export const AdminResourcesManagementPage = () => {
 
   const isEditMode = useMemo(() => editingId !== null, [editingId]);
 
+  const safeText = (value) => String(value ?? '').toLowerCase();
+
   const filteredRequests = useMemo(() => {
     if (!searchQuery.trim()) return requests;
     const query = searchQuery.toLowerCase();
     return requests.filter((request) =>
-      request.facilityOrAsset.toLowerCase().includes(query) ||
-      request.resourceType.toLowerCase().includes(query) ||
-      request.requestId.toLowerCase().includes(query)
+      safeText(request.facilityOrAsset).includes(query) ||
+      safeText(request.resourceType).includes(query) ||
+      safeText(request.requestId).includes(query)
     );
   }, [requests, searchQuery]);
 

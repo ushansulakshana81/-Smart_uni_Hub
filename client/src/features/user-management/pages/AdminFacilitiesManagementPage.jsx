@@ -13,6 +13,7 @@ export const AdminFacilitiesManagementPage = () => {
   const [form, setForm] = useState(emptyForm);
   const [facilities, setFacilities] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [selectedFacilityId, setSelectedFacilityId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -20,13 +21,15 @@ export const AdminFacilitiesManagementPage = () => {
 
   const isEditMode = useMemo(() => editingId !== null, [editingId]);
 
+  const safeText = (value) => String(value ?? '').toLowerCase();
+
   const filteredFacilities = useMemo(() => {
     if (!searchQuery.trim()) return facilities;
     const query = searchQuery.toLowerCase();
     return facilities.filter((facility) =>
-      facility.facilityName.toLowerCase().includes(query) ||
-      facility.location.toLowerCase().includes(query) ||
-      facility.fId.toLowerCase().includes(query)
+      safeText(facility.facilityName).includes(query) ||
+      safeText(facility.location).includes(query) ||
+      safeText(facility.fId).includes(query)
     );
   }, [facilities, searchQuery]);
 
@@ -54,6 +57,7 @@ export const AdminFacilitiesManagementPage = () => {
   const resetForm = () => {
     setForm(emptyForm);
     setEditingId(null);
+    setSelectedFacilityId('');
   };
 
   const handleSubmit = async (event) => {
@@ -87,6 +91,7 @@ export const AdminFacilitiesManagementPage = () => {
 
   const handleEdit = (item) => {
     setEditingId(item.id);
+    setSelectedFacilityId(item.fId || '');
     setForm({
       facilityName: item.facilityName,
       type: item.type,
@@ -125,6 +130,11 @@ export const AdminFacilitiesManagementPage = () => {
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow border border-gray-200 p-6 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {isEditMode && (
+            <div className="lg:col-span-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+              <span className="font-semibold text-gray-900">Facility ID:</span> {selectedFacilityId}
+            </div>
+          )}
           <input name="facilityName" value={form.facilityName} onChange={handleChange} placeholder="Facility Name" className="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
           <input name="type" value={form.type} onChange={handleChange} placeholder="Type" className="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
           <input name="location" value={form.location} onChange={handleChange} placeholder="Location" className="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
@@ -178,7 +188,7 @@ export const AdminFacilitiesManagementPage = () => {
         <table className="w-full min-w-[900px]">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">F_id</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Facility ID</th>
               <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Facility Name</th>
               <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Type</th>
               <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Location</th>

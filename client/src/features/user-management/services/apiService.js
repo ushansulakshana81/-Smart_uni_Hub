@@ -3,6 +3,7 @@ import axiosInstance from './axiosInstance';
 const AUTH_API = '/auth';
 const USERS_API = '/users';
 const ADMIN_API = '/admin';
+const CATALOG_API = '/catalog';
 
 export const authService = {
   register: (data) => axiosInstance.post(`${AUTH_API}/register`, data),
@@ -44,4 +45,9 @@ export const adminService = {
   createResourceRequest: (data) => axiosInstance.post(`${ADMIN_API}/resource-requests`, data),
   updateResourceRequest: (id, data) => axiosInstance.put(`${ADMIN_API}/resource-requests/${id}`, data),
   deleteResourceRequest: (id) => axiosInstance.delete(`${ADMIN_API}/resource-requests/${id}`),
+};
+
+export const catalogService = {
+  getFacilities: () => axiosInstance.get(`${CATALOG_API}/facilities`),
+  getAssets: () => axiosInstance.get(`${CATALOG_API}/assets`),
 };
