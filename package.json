@@ -1,0 +1,7 @@
+{
+  "name": "smart-uni-hub",
+  "private": true,
+  "scripts": {
+    "dev": "npx concurrently \"cd server && mvnw.cmd spring-boot:run\" \"cd client && npm run dev\""
+  }
+}
