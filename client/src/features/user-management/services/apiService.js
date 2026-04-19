@@ -5,6 +5,7 @@ const USERS_API = '/users';
 const ADMIN_API = '/admin';
 const CATALOG_API = '/catalog';
 const TICKETS_API = '/tickets';
+const NOTIFICATIONS_API = '/notifications';
 
 export const authService = {
   register: (data) => axiosInstance.post(`${AUTH_API}/register`, data),
@@ -73,4 +74,11 @@ export const bookingService = {
   reviewBooking: (bookingId, data) => axiosInstance.patch(`/bookings/${bookingId}/review`, data),
   cancelBooking: (bookingId, data) => axiosInstance.patch(`/bookings/${bookingId}/cancel`, data),
   deleteBooking: (bookingId) => axiosInstance.delete(`/bookings/${bookingId}`),
+};
+
+export const notificationService = {
+  getMyNotifications: (params = {}) => axiosInstance.get(NOTIFICATIONS_API, { params }),
+  getUnreadCount: () => axiosInstance.get(`${NOTIFICATIONS_API}/unread-count`),
+  markAsRead: (notificationId) => axiosInstance.patch(`${NOTIFICATIONS_API}/${notificationId}/read`),
+  markAllAsRead: () => axiosInstance.patch(`${NOTIFICATIONS_API}/read-all`),
 };

@@ -2,6 +2,8 @@ package com.sliit.paf.smart_campus_hub.ticketing.service.impl;
 
 import com.sliit.paf.smart_campus_hub.exception.ResourceNotFoundException;
 import com.sliit.paf.smart_campus_hub.exception.UnauthorizedException;
+import com.sliit.paf.smart_campus_hub.notifications.entity.NotificationType;
+import com.sliit.paf.smart_campus_hub.notifications.service.NotificationService;
 import com.sliit.paf.smart_campus_hub.ticketing.dto.TicketCreateRequest;
 import com.sliit.paf.smart_campus_hub.ticketing.dto.TicketResponseCreateRequest;
 import com.sliit.paf.smart_campus_hub.ticketing.dto.TicketResponseUpdateRequest;
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -32,6 +35,7 @@ public class TicketingServiceImpl implements TicketingService {
 
     private final SupportTicketRepository ticketRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Override
     public List<SupportTicket> getTicketsForCurrentUser() {
@@ -69,7 +73,16 @@ public class TicketingServiceImpl implements TicketingService {
                 .updatedAt(now)
                 .build();
 
-        return ticketRepository.save(ticket);
+        SupportTicket saved = ticketRepository.save(ticket);
+
+        notifyAdminsExcept(
+            currentUser.getId(),
+            "New Ticket Created",
+            currentUser.getFirstName() + " created ticket " + saved.getTicketCode(),
+            saved.getId()
+        );
+
+        return saved;
     }
 
     @Override
@@ -87,7 +100,14 @@ public class TicketingServiceImpl implements TicketingService {
         ticket.setLocation(request.getLocation().trim());
         ticket.setUpdatedAt(LocalDateTime.now());
 
-        return ticketRepository.save(ticket);
+        SupportTicket saved = ticketRepository.save(ticket);
+        notifyTicketOwnerIfNeeded(
+            saved,
+            currentUser,
+            "Ticket Updated",
+            "Your ticket " + saved.getTicketCode() + " was updated by admin"
+        );
+        return saved;
     }
 
     @Override
@@ -122,7 +142,25 @@ public class TicketingServiceImpl implements TicketingService {
 
         ticket.setStatus(request.getStatus());
         ticket.setUpdatedAt(LocalDateTime.now());
-        return ticketRepository.save(ticket);
+        SupportTicket saved = ticketRepository.save(ticket);
+
+        if (isAdmin(currentUser)) {
+            notifyTicketOwnerIfNeeded(
+                saved,
+                currentUser,
+                "Ticket Status Updated",
+                "Your ticket " + saved.getTicketCode() + " status is now " + saved.getStatus()
+            );
+        } else {
+            notifyAdminsExcept(
+                currentUser.getId(),
+                "Ticket Closed by User",
+                currentUser.getFirstName() + " closed ticket " + saved.getTicketCode(),
+                saved.getId()
+            );
+        }
+
+        return saved;
     }
 
     @Override
@@ -133,6 +171,13 @@ public class TicketingServiceImpl implements TicketingService {
         }
         SupportTicket ticket = findTicket(ticketId);
         ticketRepository.delete(ticket);
+
+        notifyTicketOwnerIfNeeded(
+            ticket,
+            currentUser,
+            "Ticket Deleted",
+            "Your ticket " + ticket.getTicketCode() + " was deleted by admin"
+        );
     }
 
     @Override
@@ -157,7 +202,25 @@ public class TicketingServiceImpl implements TicketingService {
 
         ticket.getResponses().add(response);
         ticket.setUpdatedAt(now);
-        return ticketRepository.save(ticket);
+        SupportTicket saved = ticketRepository.save(ticket);
+
+        if (isAdmin(currentUser)) {
+            notifyTicketOwnerIfNeeded(
+                saved,
+                currentUser,
+                "New Response on Ticket",
+                "Admin replied on your ticket " + saved.getTicketCode()
+            );
+        } else {
+            notifyAdminsExcept(
+                currentUser.getId(),
+                "User Replied to Ticket",
+                currentUser.getFirstName() + " replied on ticket " + saved.getTicketCode(),
+                saved.getId()
+            );
+        }
+
+        return saved;
     }
 
     @Override
@@ -173,7 +236,16 @@ public class TicketingServiceImpl implements TicketingService {
         response.setUpdatedAt(LocalDateTime.now());
 
         ticket.setUpdatedAt(LocalDateTime.now());
-        return ticketRepository.save(ticket);
+        SupportTicket saved = ticketRepository.save(ticket);
+
+        notifyTicketOwnerIfNeeded(
+            saved,
+            currentUser,
+            "Ticket Response Updated",
+            "A response on your ticket " + saved.getTicketCode() + " was updated"
+        );
+
+        return saved;
     }
 
     @Override
@@ -186,7 +258,16 @@ public class TicketingServiceImpl implements TicketingService {
         SupportTicket ticket = findTicket(ticketId);
         ticket.getResponses().removeIf(response -> response.getId().equals(responseId));
         ticket.setUpdatedAt(LocalDateTime.now());
-        return ticketRepository.save(ticket);
+        SupportTicket saved = ticketRepository.save(ticket);
+
+        notifyTicketOwnerIfNeeded(
+            saved,
+            currentUser,
+            "Ticket Response Removed",
+            "A response on your ticket " + saved.getTicketCode() + " was removed"
+        );
+
+        return saved;
     }
 
     private User getCurrentUser() {
@@ -258,5 +339,36 @@ public class TicketingServiceImpl implements TicketingService {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private void notifyTicketOwnerIfNeeded(SupportTicket ticket, User actor, String title, String message) {
+        if (ticket.getCreatedByUserId() == null || ticket.getCreatedByUserId().equals(actor.getId())) {
+            return;
+        }
+        notificationService.notifyUser(
+                ticket.getCreatedByUserId(),
+                NotificationType.TICKET,
+                title,
+                message,
+                "TICKET",
+                ticket.getId()
+        );
+    }
+
+    private void notifyAdminsExcept(String excludedUserId, String title, String message, String ticketId) {
+        List<String> adminIds = userRepository.findByRole(Role.ADMIN)
+                .stream()
+                .map(User::getId)
+                .filter(id -> excludedUserId == null || !excludedUserId.equals(id))
+                .collect(Collectors.toList());
+
+        notificationService.notifyUsers(
+                adminIds,
+                NotificationType.TICKET,
+                title,
+                message,
+                "TICKET",
+                ticketId
+        );
     }
 }

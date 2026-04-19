@@ -16,7 +16,6 @@ import { BookingsPage } from './features/user-management/pages/BookingsPage';
 import { SupportTicketsPage } from './features/user-management/pages/SupportTicketsPage';
 import { AdminFacilitiesManagementPage } from './features/user-management/pages/AdminFacilitiesManagementPage';
 import { AdminAssetsCataloguePage } from './features/user-management/pages/AdminAssetsCataloguePage';
-import { AdminResourcesManagementPage } from './features/user-management/pages/AdminResourcesManagementPage';
 
 function AppContent() {
   const { initializeAuth } = useAuth();
@@ -66,14 +65,6 @@ function AppContent() {
           element={
             <ProtectedRoute requiredRole="ADMIN">
               <AdminAssetsCataloguePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="admin/resources-management"
-          element={
-            <ProtectedRoute requiredRole="ADMIN">
-              <AdminResourcesManagementPage />
             </ProtectedRoute>
           }
         />

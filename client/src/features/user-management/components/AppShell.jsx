@@ -1,14 +1,29 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { notificationService } from '../services/apiService';
 
 export const AppShell = () => {
   const { user, isAdmin, logout } = useAuth();
   const location = useLocation();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
-  const [notifications] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const popupRef = useRef(null);
+
+  const fetchNotifications = async () => {
+    try {
+      const [listResponse, countResponse] = await Promise.all([
+        notificationService.getMyNotifications(),
+        notificationService.getUnreadCount(),
+      ]);
+      setNotifications(listResponse.data.data || []);
+      setUnreadCount(countResponse.data.data?.count || 0);
+    } catch (err) {
+      // Keep UI resilient even if notifications fail temporarily.
+    }
+  };
 
   useEffect(() => {
     if (location.pathname.startsWith('/app/admin/')) {
@@ -26,6 +41,30 @@ export const AppShell = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+    const intervalId = setInterval(fetchNotifications, 15000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const handleMarkAsRead = async (notificationId) => {
+    try {
+      await notificationService.markAsRead(notificationId);
+      await fetchNotifications();
+    } catch (err) {
+      // Ignore transient error and keep existing list
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await notificationService.markAllAsRead();
+      await fetchNotifications();
+    } catch (err) {
+      // Ignore transient error and keep existing list
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -97,16 +136,6 @@ export const AppShell = () => {
                   >
                     Assets Catalogue
                   </NavLink>
-                  <NavLink
-                    to="/app/admin/resources-management"
-                    className={({ isActive }) =>
-                      `block px-3 py-2 rounded-lg text-sm transition ${
-                        isActive ? 'bg-indigo-500 text-white font-semibold' : 'text-indigo-100 hover:bg-indigo-600/40'
-                      }`
-                    }
-                  >
-                    Resources Management
-                  </NavLink>
                 </div>
               )}
             </>
@@ -138,26 +167,52 @@ export const AppShell = () => {
                 className="relative text-2xl hover:text-indigo-600 transition"
               >
                 N
-                {notifications.length > 0 && (
+                {unreadCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                    {notifications.length}
+                    {unreadCount}
                   </span>
                 )}
               </button>
 
               {notificationsOpen && (
                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-y-auto">
-                  <div className="p-4 border-b border-gray-200">
+                  <div className="p-4 border-b border-gray-200 flex items-center justify-between gap-3">
                     <h3 className="font-bold text-gray-900">Notifications</h3>
+                    {unreadCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleMarkAllAsRead}
+                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+                      >
+                        Mark all as read
+                      </button>
+                    )}
                   </div>
                   <ul className="divide-y divide-gray-200">
                     {notifications.length === 0 && (
                       <li className="p-4 text-center text-gray-500">No notifications available.</li>
                     )}
                     {notifications.map((item) => (
-                      <li key={item.id} className="p-4 hover:bg-gray-50 transition">
-                        <p className="font-semibold text-gray-900">{item.title}</p>
-                        <p className="text-sm text-gray-600 mt-1">{item.detail}</p>
+                      <li key={item.id} className={`p-4 hover:bg-gray-50 transition ${item.read ? 'bg-white' : 'bg-indigo-50/40'}`}>
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-semibold text-gray-900">{item.title}</p>
+                            <p className="text-sm text-gray-600 mt-1">{item.message}</p>
+                            {item.createdAt && (
+                              <p className="text-xs text-gray-500 mt-2">{new Date(item.createdAt).toLocaleString()}</p>
+                            )}
+                          </div>
+
+                          {!item.read && (
+                            <button
+                              type="button"
+                              onClick={() => handleMarkAsRead(item.id)}
+                              className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 whitespace-nowrap"
+                            >
+                              Mark read
+                            </button>
+                          )}
+                        </div>
                       </li>
                     ))}
                   </ul>

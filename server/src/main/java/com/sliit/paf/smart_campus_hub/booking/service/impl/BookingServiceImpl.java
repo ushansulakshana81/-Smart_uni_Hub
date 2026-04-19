@@ -16,6 +16,8 @@ import com.sliit.paf.smart_campus_hub.booking.repository.BookingRepository;
 import com.sliit.paf.smart_campus_hub.booking.service.BookingService;
 import com.sliit.paf.smart_campus_hub.exception.ResourceNotFoundException;
 import com.sliit.paf.smart_campus_hub.exception.UnauthorizedException;
+import com.sliit.paf.smart_campus_hub.notifications.entity.NotificationType;
+import com.sliit.paf.smart_campus_hub.notifications.service.NotificationService;
 import com.sliit.paf.smart_campus_hub.usermanagement.entity.Role;
 import com.sliit.paf.smart_campus_hub.usermanagement.entity.User;
 import com.sliit.paf.smart_campus_hub.usermanagement.repository.UserRepository;
@@ -44,6 +46,7 @@ public class BookingServiceImpl implements BookingService {
     private final UserRepository userRepository;
     private final FacilityRepository facilityRepository;
     private final AssetRepository assetRepository;
+    private final NotificationService notificationService;
 
     @Override
     public List<Booking> getBookings(BookingStatus status, BookingResourceType resourceType, LocalDate fromDate, LocalDate toDate, String search, boolean adminView) {
@@ -97,7 +100,16 @@ public class BookingServiceImpl implements BookingService {
                 .updatedAt(now)
                 .build();
 
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+
+        notifyAdminsExcept(
+            currentUser.getId(),
+            "New Booking Request",
+            currentUser.getFirstName() + " requested booking " + saved.getBookingCode(),
+            saved.getId()
+        );
+
+        return saved;
     }
 
     @Override
@@ -130,7 +142,16 @@ public class BookingServiceImpl implements BookingService {
         booking.setPurpose(request.getPurpose().trim());
         booking.setUpdatedAt(LocalDateTime.now());
 
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+
+        notifyAdminsExcept(
+            currentUser.getId(),
+            "Booking Updated",
+            currentUser.getFirstName() + " updated booking " + saved.getBookingCode(),
+            saved.getId()
+        );
+
+        return saved;
     }
 
     @Override
@@ -166,7 +187,16 @@ public class BookingServiceImpl implements BookingService {
         booking.setReviewedByName(currentUser.getFirstName() + " " + currentUser.getLastName());
         booking.setReviewedAt(LocalDateTime.now());
         booking.setUpdatedAt(LocalDateTime.now());
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+
+        notifyBookingOwnerIfNeeded(
+            saved,
+            currentUser,
+            "Booking " + saved.getStatus(),
+            "Your booking " + saved.getBookingCode() + " is " + saved.getStatus() + ". Reason: " + reason
+        );
+
+        return saved;
     }
 
     @Override
@@ -186,7 +216,25 @@ public class BookingServiceImpl implements BookingService {
         booking.setCancelReason(normalizeOptionalText(request.getReason()));
         booking.setCancelledAt(LocalDateTime.now());
         booking.setUpdatedAt(LocalDateTime.now());
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+
+        if (isAdmin(currentUser)) {
+            notifyBookingOwnerIfNeeded(
+                saved,
+                currentUser,
+                "Booking Cancelled",
+                "Your booking " + saved.getBookingCode() + " was cancelled by admin"
+            );
+        } else {
+            notifyAdminsExcept(
+                currentUser.getId(),
+                "Booking Cancelled by User",
+                currentUser.getFirstName() + " cancelled booking " + saved.getBookingCode(),
+                saved.getId()
+            );
+        }
+
+        return saved;
     }
 
     @Override
@@ -197,6 +245,13 @@ public class BookingServiceImpl implements BookingService {
         }
         Booking booking = findBooking(bookingId);
         bookingRepository.delete(booking);
+
+        notifyBookingOwnerIfNeeded(
+            booking,
+            currentUser,
+            "Booking Deleted",
+            "Your booking " + booking.getBookingCode() + " was deleted by admin"
+        );
     }
 
     private Booking findBooking(String bookingId) {
@@ -321,6 +376,37 @@ public class BookingServiceImpl implements BookingService {
         if (!resourceData.bookable()) {
             throw new IllegalArgumentException("Selected resource is not currently available for booking");
         }
+    }
+
+    private void notifyBookingOwnerIfNeeded(Booking booking, User actor, String title, String message) {
+        if (booking.getCreatedByUserId() == null || booking.getCreatedByUserId().equals(actor.getId())) {
+            return;
+        }
+        notificationService.notifyUser(
+                booking.getCreatedByUserId(),
+                NotificationType.BOOKING,
+                title,
+                message,
+                "BOOKING",
+                booking.getId()
+        );
+    }
+
+    private void notifyAdminsExcept(String excludedUserId, String title, String message, String bookingId) {
+        List<String> adminIds = userRepository.findByRole(Role.ADMIN)
+                .stream()
+                .map(User::getId)
+                .filter(id -> excludedUserId == null || !excludedUserId.equals(id))
+                .collect(Collectors.toList());
+
+        notificationService.notifyUsers(
+                adminIds,
+                NotificationType.BOOKING,
+                title,
+                message,
+                "BOOKING",
+                bookingId
+        );
     }
 
     private record BookingResourceData(String resourceId, String resourceName, String resourceDisplayName, String location, boolean bookable) {
